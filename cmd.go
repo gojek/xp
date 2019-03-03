@@ -30,6 +30,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "config",
 			Value: xpConfig,
+			Usage: "set the default configuration file",
 		},
 	}
 
@@ -74,13 +75,17 @@ func main() {
 		{
 			Name:    "show-config",
 			Aliases: []string{"sc"},
+			Usage:   "Print the current config",
 			Action: func(c *cli.Context) error {
 				fmt.Print(d)
 				return nil
 			},
 		},
 		{
-			Name: "add-info",
+			Name:        "add-info",
+			Usage:       "Add xp info to the COMMIT msg file",
+			Description: "This is supposed to be invoked from inside a prepare-commit-msg hook",
+			ArgsUsage:   "commit-msg-file",
 			Action: func(c *cli.Context) error {
 				wd, err := os.Getwd()
 				if err != nil {
@@ -97,10 +102,13 @@ func main() {
 		{
 			Name:    "dev",
 			Aliases: []string{"d"},
+			Usage:   "Dev management",
 			Subcommands: []cli.Command{
 				{
-					Name:    "add",
-					Aliases: []string{"a"},
+					Name:      "add",
+					Aliases:   []string{"a"},
+					Usage:     "Add a new developer",
+					ArgsUsage: `id "name" email`,
 					Action: func(c *cli.Context) error {
 						args := c.Args()
 
@@ -118,19 +126,25 @@ func main() {
 		{
 			Name:    "repo",
 			Aliases: []string{"r"},
+			Usage:   "Repo management",
 			Subcommands: []cli.Command{
 				{
-					Name:    "init",
-					Aliases: []string{"i"},
+					Name:      "init",
+					Aliases:   []string{"i"},
+					Usage:     "Initialize a repo. Setup prepare-commit-msg hook",
+					ArgsUsage: ".",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name: "overwrite",
+							Name:  "overwrite",
+							Usage: "overwrite the .git/hooks/prepare-commit-msg file",
 						},
 						cli.StringSliceFlag{
-							Name: "devs",
+							Name:  "devs",
+							Usage: "initial set of devs (optional)",
 						},
 						cli.StringFlag{
-							Name: "story-id",
+							Name:  "story-id",
+							Usage: "story id (optional)",
 						},
 					},
 					Action: func(c *cli.Context) error {
@@ -161,8 +175,10 @@ func main() {
 					},
 				},
 				{
-					Name:    "devs",
-					Aliases: []string{"d"},
+					Name:      "devs",
+					Aliases:   []string{"d"},
+					Usage:     "Set list of devs working on repo",
+					ArgsUsage: "dev1 dev2 dev3",
 					Action: func(c *cli.Context) error {
 						wd, err := os.Getwd()
 						if err != nil {
