@@ -120,7 +120,7 @@ func initRepo(pathStr string, overwrite bool) error {
 		}
 	}
 
-	f, err := os.Create(hookFile)
+	f, err := os.OpenFile(hookFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return errors.Wrapf(err, "create hook file %s failed", hookFile)
 	}
