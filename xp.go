@@ -127,7 +127,7 @@ func initRepo(pathStr string, overwrite bool) error {
 	defer f.Close()
 
 	f.WriteString("#!/bin/sh\n")
-	f.WriteString("/Users/kidoman/dev/personal/xp/_bin/xp add-info $1\n")
+	f.WriteString("xp add-info $1\n")
 
 	return nil
 }
