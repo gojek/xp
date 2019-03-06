@@ -222,25 +222,29 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	for _, dev := range edevs {
 		devs[dev.Email] = dev
 	}
-	for _, devID := range repo.Devs {
-		dev := d.lookupDev(devID)
-		if dev == nil {
-			return errors.Errorf("non-existing dev %s marked as working for repo %s", devID, repoPath)
-		}
-
-		devs[dev.Email] = dev
-	}
 
 	devIDs, endIdx := firstLineDevIDs(msgStr)
 	if len(devIDs) != 0 {
-		log.Printf("%v %d", devIDs, endIdx)
-
+		devs = make(map[string]*dev)
 		msgStr = msgStr[endIdx:]
 
 		for _, devID := range devIDs {
 			dev := d.lookupDev(devID)
 			if dev == nil {
 				return errors.Errorf("non-existing dev %s provided in the first line", devID)
+			}
+
+			devs[dev.Email] = dev
+		}
+	}
+
+	// We only look at repo devs if both existing and first line devs
+	// are not specifying any devs.
+	if len(devs) == 0 {
+		for _, devID := range repo.Devs {
+			dev := d.lookupDev(devID)
+			if dev == nil {
+				return errors.Errorf("non-existing dev %s marked as working for repo %s", devID, repoPath)
 			}
 
 			devs[dev.Email] = dev
