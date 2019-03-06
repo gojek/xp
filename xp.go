@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -184,7 +186,62 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	}
 	authorName, authorEmail := nameEmail(author)
 
-	f, err := os.OpenFile(msgFile, os.O_WRONLY|os.O_APPEND, 0)
+	msg, err := ioutil.ReadFile(msgFile)
+	if err != nil {
+		return errors.Wrapf(err, "read commit msg from file %s failed", msgFile)
+	}
+
+	var (
+		msgStr = string(msg)
+
+		devs  = make(map[string]*dev)
+		edevs = existingDevs(msgStr)
+	)
+
+	for _, dev := range edevs {
+		devs[dev.Email] = dev
+	}
+	for _, devID := range repo.Devs {
+		dev := d.lookupDev(devID)
+		if dev == nil {
+			return errors.Errorf("non-existing dev %s marked as working for repo %s", devID, repoPath)
+		}
+
+		devs[dev.Email] = dev
+	}
+
+	devIDs, endIdx := firstLineDevIDs(msgStr)
+	if len(devIDs) != 0 {
+		log.Printf("%v %d", devIDs, endIdx)
+
+		msgStr = msgStr[endIdx:]
+
+		for _, devID := range devIDs {
+			dev := d.lookupDev(devID)
+			if dev == nil {
+				return errors.Errorf("non-existing dev %s provided in the first line", devID)
+			}
+
+			devs[dev.Email] = dev
+		}
+	}
+
+	coAuthorIdx := strings.Index(msgStr, "Co-authored-by:")
+	if coAuthorIdx != -1 {
+		msgStr = msgStr[:coAuthorIdx-1]
+	}
+
+	// The message might have empty space surrounding it.
+	// For ex in:
+	//
+	//   [a,b,c] Hello
+	//
+	// Once we remove the dev ids from the start of the message,
+	// the space before `Hello` would still be there. Same with
+	// the `Co-authored-by` lines.
+	msgStr = strings.TrimSpace(msgStr)
+
+	f, err := os.OpenFile(msgFile, os.O_WRONLY|os.O_TRUNC, 0)
 	if err != nil {
 		return errors.Wrapf(err, "open on commit msg file %s failed", msgFile)
 	}
@@ -192,12 +249,21 @@ func (d *data) appendInfo(wd, msgFile string) error {
 
 	// TODO: Add story info.
 
+	if _, err := io.Copy(f, strings.NewReader(msgStr)); err != nil {
+		return errors.Wrapf(err, "write existing msg back failed")
+	}
+
 	fmt.Fprintf(f, "\n\n")
-	for _, devID := range repo.Devs {
-		dev := d.lookupDev(devID)
-		if dev == nil {
-			return errors.Errorf("non-existing dev %s marked as working for repo %s", devID, repoPath)
-		}
+
+	// We will write the authors back sorted by their email.
+	devEmails := make([]string, 0, len(devs))
+	for email := range devs {
+		devEmails = append(devEmails, email)
+	}
+	sort.Strings(devEmails)
+
+	for _, email := range devEmails {
+		dev := devs[email]
 
 		if dev.Email == authorEmail || dev.Name == authorName {
 			log.Printf("skipping %s (same as author)", dev)
@@ -205,9 +271,39 @@ func (d *data) appendInfo(wd, msgFile string) error {
 		}
 
 		fmt.Fprintf(f, "Co-authored-by: %s <%s>\n", dev.Name, dev.Email)
+		log.Printf("added %s as author", dev)
 	}
 
 	return nil
+}
+
+func firstLineDevIDs(msg string) ([]string, int) {
+	if len(msg) == 0 {
+		return nil, 0
+	}
+
+	if msg[0] != '[' {
+		return nil, 0
+	}
+
+	for i, ch := range msg {
+		switch {
+		case i > 50:
+			return nil, 0
+
+		case ch == '\n':
+			return nil, 0
+
+		case ch == ']':
+			devsStr := msg[1:i]
+			fmt.Printf("%d %v %q", i, string(ch), devsStr)
+			devIDs := strings.Split(devsStr, ",")
+
+			return devIDs, i + 1
+		}
+	}
+
+	return nil, 0
 }
 
 func gitVar(varStr string) (string, error) {
@@ -228,4 +324,22 @@ func nameEmail(ident string) (string, string) {
 	name := ident[nameStart : idx-1]
 	email := ident[idx+1 : strings.Index(ident, ">")]
 	return name, email
+}
+
+func existingDevs(msg string) []*dev {
+	var devs []*dev
+
+	scanner := bufio.NewScanner(strings.NewReader(msg))
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if !strings.HasPrefix(line, "Co-authored-by") {
+			continue
+		}
+
+		name, email := nameEmail(line)
+		devs = append(devs, &dev{Name: name, Email: email})
+	}
+
+	return devs
 }
