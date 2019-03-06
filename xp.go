@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -113,23 +114,43 @@ func initRepo(pathStr string, overwrite bool) error {
 		return errors.Wrapf(err, ".git not found in %s", pathStr)
 	}
 
-	hookFile := path.Join(gitPath, "hooks/prepare-commit-msg")
+	hookFile1 := path.Join(gitPath, "hooks/prepare-commit-msg")
+	hookFile2 := path.Join(gitPath, "hooks/commit-msg")
 
 	if !overwrite {
-		if _, err := os.Stat(hookFile); err == nil {
+		if _, err := os.Stat(hookFile1); err == nil {
 			// TODO: Check if it is our prepare-commit-msg hook.
-			return errors.Errorf("prepare-commit-msg hook (%s) is already defined", hookFile)
+			return errors.Errorf("prepare-commit-msg hook (%s) is already defined", hookFile1)
+		}
+
+		if _, err := os.Stat(hookFile2); err == nil {
+			// TODO: Check if it is our prepare-commit-msg hook.
+			return errors.Errorf("commit-msg hook (%s) is already defined", hookFile2)
 		}
 	}
 
-	f, err := os.OpenFile(hookFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		return errors.Wrapf(err, "create hook file %s failed", hookFile)
-	}
-	defer f.Close()
+	var buf bytes.Buffer
 
-	f.WriteString("#!/bin/sh\n")
-	f.WriteString("xp add-info $1\n")
+	buf.WriteString("#!/bin/sh\n")
+	buf.WriteString("xp add-info $1\n")
+
+	hook := buf.String()
+
+	for _, hookFile := range []string{hookFile1, hookFile2} {
+		if err := func() error {
+			f, err := os.OpenFile(hookFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+			if err != nil {
+				return errors.Wrapf(err, "create hook file %s failed", hookFile)
+			}
+			defer f.Close()
+
+			f.WriteString(hook)
+
+			return nil
+		}(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
