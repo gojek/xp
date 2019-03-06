@@ -19,6 +19,10 @@ func TestNameEmail(t *testing.T) {
 			"name <name> 1551654611 +0530",
 			"name", "name",
 		},
+		{
+			"Co-authored-by: name <email>",
+			"name", "email",
+		},
 	}
 
 	for _, tt := range tests {

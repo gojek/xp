@@ -220,7 +220,12 @@ func gitVar(varStr string) (string, error) {
 
 func nameEmail(ident string) (string, string) {
 	idx := strings.Index(ident, "<")
-	name := ident[:idx-1]
+	colonIdx := strings.Index(ident, ":")
+	nameStart := 0
+	if colonIdx != -1 && colonIdx < idx {
+		nameStart = colonIdx + 2
+	}
+	name := ident[nameStart : idx-1]
 	email := ident[idx+1 : strings.Index(ident, ">")]
 	return name, email
 }
