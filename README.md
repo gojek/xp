@@ -25,7 +25,7 @@ COMMANDS:
      help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config value  set the default configuration file (default: "/Users/kidoman/.xp")
+   --config value  set the default configuration file (default: "~/.xp")
    --help, -h      show help
    --version, -v   print the version
 ```
@@ -66,7 +66,7 @@ A separate command `add-info` is made available for use from within `git` hooks:
 Suppose we have a repo at `~/work/lambda` which we want to now manage using `xp` (this assumes you have already installed `xp` using the instructions above):
 
 
-Add Karan Misra <kidoman@gmail.com> as a tracked author in the system with shortcode "km" to allow for easy referencing in future command line invocations or the first line of commit messages. Same for "akshat":
+Add Karan Misra &lt;kidoman@gmail.com&gt; as a tracked author in the system with shortcode "km" to allow for easy referencing in future command line invocations or the first line of commit messages. Same for "akshat":
 
 ```
 $ xp dev add km "Karan Misra" kidoman@beef.com
@@ -140,4 +140,4 @@ Date:   Thu Mar 7 03:12:21 2019 +0530
     Co-authored-by: Anand Shankar <anand@beef.com>
 ```
 
-Note: See how the `[as]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting.
+Note: See how the `[as]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting (thus `akshat` is not in the list anymore.)
