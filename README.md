@@ -2,6 +2,34 @@
 
 `xp` is a tool created to make practising extreme programming easier.
 
+## Reference
+
+Full list of options supported:
+
+```
+➜  ~ xp
+NAME:
+   xp - extreme programming made simple
+
+USAGE:
+   xp [global options] command [command options] [arguments...]
+
+VERSION:
+   0.2.1
+
+COMMANDS:
+     show-config, sc  Print the current config
+     add-info         Add xp info to the COMMIT msg file
+     dev, d           Dev management
+     repo, r          Repo management
+     help, h          Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --config value  set the default configuration file (default: "/Users/kidoman/.xp")
+   --help, -h      show help
+   --version, -v   print the version
+```
+
 ## Features
 
 - Manage the co-authorship of commits by automatically writing appropriate* `Co-authored-by` trailers (see [link](https://help.github.com/articles/creating-a-commit-with-multiple-authors/) for details on this standard)
