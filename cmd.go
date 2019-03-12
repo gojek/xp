@@ -94,7 +94,9 @@ func main() {
 
 				msgFile := c.Args().Get(0)
 
-				d.appendInfo(wd, msgFile)
+				if err := d.appendInfo(wd, msgFile); err != nil {
+					return errors.Wrap(err, "info add failed")
+				}
 
 				return nil
 			},
