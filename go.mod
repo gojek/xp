@@ -1,4 +1,4 @@
-module xp
+module github.com/kidoman/xp
 
 require (
 	github.com/ghodss/yaml v1.0.0
