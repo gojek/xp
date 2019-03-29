@@ -37,6 +37,11 @@ func TestFirstLineDevIDs(t *testing.T) {
 			ids: []string{"a", "b", "c"},
 			idx: 7,
 		},
+		{
+			msg: "[a|b|c]hello there",
+			ids: []string{"a", "b", "c"},
+			idx: 7,
+		},
 	}
 
 	for _, tt := range tests {

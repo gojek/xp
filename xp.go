@@ -321,10 +321,16 @@ func firstLineDevIDs(msg string) ([]string, int) {
 
 		case ch == ']':
 			devsStr := msg[1:i]
-			fmt.Printf("%d %v %q", i, string(ch), devsStr)
-			devIDs := strings.Split(devsStr, ",")
+			switch {
+			case strings.Index(devsStr, ",") != -1:
+				return strings.Split(devsStr, ","), i + 1
 
-			return devIDs, i + 1
+			case strings.Index(devsStr, "|") != -1:
+				return strings.Split(devsStr, "|"), i + 1
+
+			default:
+				return []string{devsStr}, i + 1
+			}
 		}
 	}
 

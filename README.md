@@ -140,4 +140,10 @@ Date:   Thu Mar 7 03:12:21 2019 +0530
     Co-authored-by: Anand Shankar <anand@beef.com>
 ```
 
-Note: See how the `[as]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting (thus `akshat` is not in the list anymore.)
+Note: See how the `[as]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting (thus `akshat` is not in the list anymore.) Multiple co-authors can be similarly added by separating their aliases by `,` or `|` like so:
+
+
+```
+$ git commit -m"[anand,akshat] Make world better"
+$ git commit -m"[anand|akshat] Make world better"
+```
