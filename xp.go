@@ -125,18 +125,17 @@ func initRepo(pathStr string, overwrite bool) error {
 	for _, hookFile := range hookFiles {
 		hookFile = path.Join(gitPath, hookFile)
 
-		if err := func() error {
-			f, err := os.OpenFile(hookFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-			if err != nil {
-				return errors.Wrapf(err, "create hook file %s failed", hookFile)
-			}
-			defer f.Close()
+		f, err := os.OpenFile(hookFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			return errors.Wrapf(err, "create hook file %s failed", hookFile)
+		}
 
-			f.WriteString(hookStr)
+		if _, err := f.WriteString(hookStr); err != nil {
+			return errors.Wrap(err, "write hook content failed")
+		}
 
-			return nil
-		}(); err != nil {
-			return err
+		if err := f.Close(); err != nil {
+			return errors.Wrap(err, "close hook file failed")
 		}
 	}
 
