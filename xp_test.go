@@ -298,6 +298,21 @@ func TestInitRepo(t *testing.T) {
 			},
 			errMsg: "hooks/prepare-commit-msg is already defined",
 		},
+		{
+			desc: "overwrite existing hook",
+			prepareFn: func(dir string) error {
+				hooksDir := path.Join(dir, ".git", "hooks")
+				if err := os.MkdirAll(hooksDir, 0700|os.ModeDir); err != nil {
+					return err
+				}
+				f, err := os.Create(path.Join(hooksDir, "prepare-commit-msg"))
+				if err != nil {
+					return err
+				}
+				return f.Close()
+			},
+			overwrite: true,
+		},
 	}
 
 	for _, tt := range tests {
