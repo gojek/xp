@@ -117,14 +117,14 @@ Date:   Thu Mar 7 03:04:25 2019 +0530
 If you quickly want to author a commit with someone you typically don't pair with:
 
 ```
-$ xp dev add as "Anand Shankar" anand@beef.com
+$ xp dev add anand "Anand Shankar" anand@beef.com
 ```
 
 After making the required changes:
 
 ```
 $ git add .
-$ git commit -m"[as] Make world better"
+$ git commit -m"[anand] Make world better"
 ```
 
 The commit message becomes:
@@ -140,7 +140,7 @@ Date:   Thu Mar 7 03:12:21 2019 +0530
     Co-authored-by: Anand Shankar <anand@beef.com>
 ```
 
-Note: See how the `[as]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting (thus `akshat` is not in the list anymore.) Multiple co-authors can be similarly added by separating their aliases by `,` or `|` like so:
+Note: See how the `[anand]` from the start of the commit message has now resulted in `Anand Shankar` being added as a co-author, overriding the repo level setting (thus `akshat` is not in the list anymore.) Multiple co-authors can be similarly added by separating their aliases by `,` or `|` like so:
 
 
 ```
