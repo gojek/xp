@@ -147,8 +147,9 @@ var hookFiles = []string{
 	"hooks/commit-msg",
 }
 
-var hookStr = `#!/bin/sh\n
-xp add-info $1\n`
+var hookStr = `#!/bin/sh
+xp add-info $1
+`
 
 func (d *data) lookupRepo(pathStr string) (string, *repo) {
 	if d.Repos == nil {
