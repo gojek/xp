@@ -178,7 +178,7 @@ func main() {
 				},
 				{
 					Name:      "devs",
-					Aliases:   []string{"d"},
+					Aliases:   []string{"d", "dev"},
 					Usage:     "Set list of devs working on repo",
 					ArgsUsage: "dev1 dev2 dev3",
 					Action: func(c *cli.Context) error {
