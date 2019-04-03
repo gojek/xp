@@ -32,7 +32,7 @@ GLOBAL OPTIONS:
 
 ## Features
 
-- Manage the co-authorship of commits by automatically writing appropriate* `Co-authored-by` trailers (see [link](https://help.github.com/articles/creating-a-commit-with-multiple-authors/) for details on this standard)
+- Manage the co-authorship of commits by automatically writing appropriate* `Co-authored-by` trailers (see https://help.github.com/articles/creating-a-commit-with-multiple-authors/ for details on this standard)
 - Take co-authorship information written in the first line of the commit message and convert that into appropriate `Co-authored-by` trailers (overrides all other sources)
 - Ensure that the author drafting the commit is not duplicated as a `Co-authored-by` trailer
 - Preserve co-authorship information when ammending commits
