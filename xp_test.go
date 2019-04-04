@@ -355,7 +355,7 @@ func validateHook(t *testing.T, hook string) {
 		return
 	}
 
-	assert.Equal(t, hookStr, string(data))
+	assert.Equal(t, "#!/bin/sh\nxp add-info $1\n", string(data))
 }
 
 func TestFirstLineDevIDs(t *testing.T) {
