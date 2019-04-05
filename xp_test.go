@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -356,6 +357,103 @@ func validateHook(t *testing.T, hook string) {
 	}
 
 	assert.Equal(t, "#!/bin/sh\nxp add-info $1\n", string(data))
+}
+
+func TestLookupRepo(t *testing.T) {
+	repo1, repo2 := new(repo), new(repo)
+
+	d := data{
+		Repos: map[string]*repo{
+			"/a/b/c": repo1,
+			"/x/y/z": repo2,
+		},
+	}
+
+	tests := []struct {
+		pathStr  string
+		repoPath string
+		repo     *repo
+	}{
+		{
+			pathStr:  "/a/b/c/d",
+			repoPath: "/a/b/c",
+			repo:     repo1,
+		},
+		{
+			pathStr:  "/x/y/z",
+			repoPath: "/x/y/z",
+			repo:     repo2,
+		},
+		{
+			pathStr:  "/a/b",
+			repoPath: "",
+		},
+		{
+			pathStr:  "",
+			repoPath: "",
+		},
+	}
+
+	for _, tt := range tests {
+		repoPath, repo := d.lookupRepo(tt.pathStr)
+
+		if !assert.Equal(t, tt.repoPath, repoPath) {
+			continue
+		}
+
+		assert.Equal(t, unsafe.Pointer(tt.repo), unsafe.Pointer(repo))
+	}
+}
+
+func TestUpdateRepoDevs(t *testing.T) {
+	tests := []struct {
+		wd     string
+		devIDs []string
+		errMsg string
+	}{
+		{
+			wd:     "/a",
+			devIDs: []string{"anand"},
+		},
+		{
+			wd:     "/b",
+			errMsg: "no repo with path /b found",
+		},
+		{
+			wd:     "/a",
+			devIDs: []string{"non-existent-dev"},
+			errMsg: "dev ids validation failed: no dev with id non-existent-dev found",
+		},
+	}
+
+	for _, tt := range tests {
+		r := new(repo)
+		d := data{
+			Devs: map[string]*dev{
+				"anand": new(dev),
+			},
+			Repos: map[string]*repo{
+				"/a": r,
+			},
+		}
+
+		err := d.updateRepoDevs(tt.wd, tt.devIDs)
+
+		if tt.errMsg != "" {
+			if !assert.Error(t, err) {
+				continue
+			}
+
+			assert.Equal(t, tt.errMsg, err.Error())
+			continue
+		}
+
+		if !assert.NoError(t, err) {
+			continue
+		}
+
+		assert.Equal(t, r.Devs, tt.devIDs)
+	}
 }
 
 func TestFirstLineDevIDs(t *testing.T) {
