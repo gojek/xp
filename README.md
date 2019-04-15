@@ -15,7 +15,7 @@ USAGE:
    xp [global options] command [command options] [arguments...]
 
 VERSION:
-   0.2.3
+   0.2.4
 
 COMMANDS:
      show-config, sc  Print the current config
