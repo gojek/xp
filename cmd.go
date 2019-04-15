@@ -153,7 +153,7 @@ func main() {
 						args := c.Args()
 
 						dir := args.Get(0)
-						if dir == "." {
+						if dir == "." || dir == "" {
 							var err error
 							dir, err = os.Getwd()
 							if err != nil {
