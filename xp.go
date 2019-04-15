@@ -286,7 +286,7 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	for _, email := range devEmails {
 		dev := devs[email]
 
-		if dev.Email == authorEmail || dev.Name == authorName {
+		if dev.Email == authorEmail && dev.Name == authorName {
 			log.Printf("skipping %s (same as author)", dev)
 			continue
 		}
@@ -333,7 +333,7 @@ func firstLineDevIDs(msg string) ([]string, int) {
 	return nil, 0
 }
 
-func gitVar(varStr string) (string, error) {
+var gitVar = func(varStr string) (string, error) {
 	output, err := exec.Command("git", "var", varStr).Output()
 	if err != nil {
 		return "", errors.Wrap(err, "git exec failed")

@@ -456,6 +456,141 @@ func TestUpdateRepoDevs(t *testing.T) {
 	}
 }
 
+func TestAppendInfo(t *testing.T) {
+	d := data{
+		Devs: map[string]*dev{
+			"karan": &dev{
+				Name: "Karan Misra", Email: "karan@beef.com",
+			},
+			"anand": &dev{
+				Name: "Anand Shankar", Email: "anand@beef.com",
+			},
+			"akshat": &dev{
+				Name: "Akshat Shah", Email: "akshat@beef.com",
+			},
+		},
+		Repos: map[string]*repo{
+			"/a": &repo{
+				Devs: []string{"karan"},
+			},
+			"/b": &repo{
+				Devs: []string{"karan", "anand"},
+			},
+		},
+	}
+
+	tests := []struct {
+		desc        string
+		wd          string
+		author      string
+		msg         string
+		errMsg      string
+		expectedMsg string
+	}{
+		{
+			desc:        "no co authors",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "Line 1\n\nLine 2",
+			expectedMsg: "Line 1\n\nLine 2\n\n",
+		},
+		{
+			desc:        "co-author via repo",
+			wd:          "/a",
+			author:      "Anand Shankar <anand@beef.com>",
+			msg:         "Line 1",
+			expectedMsg: "Line 1\n\nCo-authored-by: Karan Misra <karan@beef.com>\n",
+		},
+		{
+			desc:        "co-author added in first line",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[anand] Line 1\n\nLine 2",
+			expectedMsg: "Line 1\n\nLine 2\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+		},
+		{
+			desc:        "co-author in first line is same as author",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[karan] Line 1",
+			expectedMsg: "Line 1\n\n",
+		},
+		{
+			desc:   "unknown dev in first line",
+			wd:     "/a",
+			author: "Karan Misra <karan@beef.com>",
+			msg:    "[shobhit] Line 1",
+			errMsg: "non-existing dev shobhit provided in the first line",
+		},
+		{
+			desc:        "co-author in message",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>",
+			expectedMsg: "Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+		},
+		{
+			desc:        "new co-author in first line with existing co-author in message",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[akshat] Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>",
+			expectedMsg: "Line 1\n\nCo-authored-by: Akshat Shah <akshat@beef.com>\n",
+		},
+		{
+			desc:        "unknown co-author in message",
+			wd:          "/a",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "Line 1\n\nCo-authored-by: Unknown <unknown@beef.com>",
+			expectedMsg: "Line 1\n\nCo-authored-by: Unknown <unknown@beef.com>\n",
+		},
+	}
+
+	oldGitVar := gitVar
+	defer func() {
+		gitVar = oldGitVar
+	}()
+
+	for _, tt := range tests {
+		t.Logf("case: %s", tt.desc)
+
+		f, err := ioutil.TempFile("", "")
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		if err := ioutil.WriteFile(f.Name(), []byte(tt.msg), 0700); err != nil {
+			panic(err)
+		}
+
+		gitVar = func(_ string) (string, error) {
+			return tt.author, nil
+		}
+
+		err = d.appendInfo(tt.wd, f.Name())
+
+		if tt.errMsg != "" {
+			if !assert.Error(t, err) {
+				continue
+			}
+
+			assert.Equal(t, tt.errMsg, err.Error())
+			continue
+		}
+
+		if !assert.NoError(t, err) {
+			continue
+		}
+
+		msg, err := ioutil.ReadFile(f.Name())
+		if !assert.NoError(t, err) {
+			continue
+		}
+
+		assert.Equal(t, tt.expectedMsg, string(msg))
+	}
+}
+
 func TestFirstLineDevIDs(t *testing.T) {
 	tests := []struct {
 		msg string
