@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -211,26 +213,34 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	var (
 		msgStr = string(msg)
 
-		devs  = make(map[string]*dev)
-		edevs = existingDevs(msgStr)
+		devs    = make(map[string]*dev)
+		edevs   = existingDevs(msgStr)
+		storyID = existingStoryID(msgStr)
 	)
 
 	for _, dev := range edevs {
 		devs[dev.Email] = dev
 	}
 
-	devIDs, endIdx := firstLineDevIDs(msgStr)
-	if len(devIDs) != 0 {
-		devs = make(map[string]*dev)
+	ids, endIdx := firstLineIDs(msgStr)
+	if len(ids) != 0 {
 		msgStr = msgStr[endIdx:]
 
-		for _, devID := range devIDs {
-			dev := d.lookupDev(devID)
-			if dev == nil {
-				return errors.Errorf("non-existing dev %s provided in the first line", devID)
+		devs = make(map[string]*dev)
+		for i, id := range ids {
+			dev := d.lookupDev(id)
+			if dev != nil {
+				devs[dev.Email] = dev
+				continue
 			}
 
-			devs[dev.Email] = dev
+			if i == 0 && storyIDRegexp.MatchString(id) {
+				// We will assume the the first id (if not a dev)
+				// is the story id.
+				storyID = id
+				continue
+			}
+			return errors.Errorf("non-existing dev %s provided in the first line", id)
 		}
 	}
 
@@ -247,9 +257,14 @@ func (d *data) appendInfo(wd, msgFile string) error {
 		}
 	}
 
-	coAuthorIdx := strings.Index(msgStr, "Co-authored-by:")
-	if coAuthorIdx != -1 {
-		msgStr = msgStr[:coAuthorIdx-1]
+	storyIDIdx := strings.Index(msgStr, "Story ID:")
+	if storyIDIdx != -1 {
+		msgStr = msgStr[:storyIDIdx-1]
+	} else {
+		coAuthorIdx := strings.Index(msgStr, "Co-authored-by:")
+		if coAuthorIdx != -1 {
+			msgStr = msgStr[:coAuthorIdx-1]
+		}
 	}
 
 	// The message might have empty space surrounding it.
@@ -276,6 +291,14 @@ func (d *data) appendInfo(wd, msgFile string) error {
 
 	fmt.Fprintf(f, "\n\n")
 
+	if storyID != "" {
+		if _, err := strconv.Atoi(storyID); err == nil {
+			fmt.Fprintf(f, "Story ID: #%s\n\n", storyID)
+		} else {
+			fmt.Fprintf(f, "Story ID: %s\n\n", storyID)
+		}
+	}
+
 	// We will write the authors back sorted by their email.
 	devEmails := make([]string, 0, len(devs))
 	for email := range devs {
@@ -298,7 +321,9 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	return nil
 }
 
-func firstLineDevIDs(msg string) ([]string, int) {
+var storyIDRegexp = regexp.MustCompile("#?.*[0-9]+")
+
+func firstLineIDs(msg string) ([]string, int) {
 	if len(msg) == 0 {
 		return nil, 0
 	}
@@ -316,16 +341,16 @@ func firstLineDevIDs(msg string) ([]string, int) {
 			return nil, 0
 
 		case ch == ']':
-			devsStr := msg[1:i]
+			idsStr := msg[1:i]
 			switch {
-			case strings.Index(devsStr, ",") != -1:
-				return strings.Split(devsStr, ","), i + 1
+			case strings.Index(idsStr, ",") != -1:
+				return strings.Split(idsStr, ","), i + 1
 
-			case strings.Index(devsStr, "|") != -1:
-				return strings.Split(devsStr, "|"), i + 1
+			case strings.Index(idsStr, "|") != -1:
+				return strings.Split(idsStr, "|"), i + 1
 
 			default:
-				return []string{devsStr}, i + 1
+				return []string{idsStr}, i + 1
 			}
 		}
 	}
@@ -351,6 +376,24 @@ func nameEmail(ident string) (string, string) {
 	name := ident[nameStart : idx-1]
 	email := ident[idx+1 : strings.Index(ident, ">")]
 	return name, email
+}
+
+func existingStoryID(msg string) string {
+	scanner := bufio.NewScanner(strings.NewReader(msg))
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if !strings.HasPrefix(line, "Story ID: ") {
+			continue
+		}
+
+		storyID := line[10:]
+		if storyIDRegexp.MatchString(storyID) {
+			return storyID
+		}
+	}
+
+	return ""
 }
 
 func existingDevs(msg string) []*dev {

@@ -473,9 +473,6 @@ func TestAppendInfo(t *testing.T) {
 			"/a": &repo{
 				Devs: []string{"karan"},
 			},
-			"/b": &repo{
-				Devs: []string{"karan", "anand"},
-			},
 		},
 	}
 
@@ -489,59 +486,93 @@ func TestAppendInfo(t *testing.T) {
 	}{
 		{
 			desc:        "no co authors",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "Line 1\n\nLine 2",
 			expectedMsg: "Line 1\n\nLine 2\n\n",
 		},
 		{
 			desc:        "co-author via repo",
-			wd:          "/a",
 			author:      "Anand Shankar <anand@beef.com>",
 			msg:         "Line 1",
 			expectedMsg: "Line 1\n\nCo-authored-by: Karan Misra <karan@beef.com>\n",
 		},
 		{
 			desc:        "co-author added in first line",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[anand] Line 1\n\nLine 2",
 			expectedMsg: "Line 1\n\nLine 2\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
 		},
 		{
 			desc:        "co-author in first line is same as author",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[karan] Line 1",
 			expectedMsg: "Line 1\n\n",
 		},
 		{
 			desc:   "unknown dev in first line",
-			wd:     "/a",
 			author: "Karan Misra <karan@beef.com>",
 			msg:    "[shobhit] Line 1",
 			errMsg: "non-existing dev shobhit provided in the first line",
 		},
 		{
 			desc:        "co-author in message",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>",
 			expectedMsg: "Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
 		},
 		{
 			desc:        "new co-author in first line with existing co-author in message",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[akshat] Line 1\n\nCo-authored-by: Anand Shankar <anand@beef.com>",
 			expectedMsg: "Line 1\n\nCo-authored-by: Akshat Shah <akshat@beef.com>\n",
 		},
 		{
 			desc:        "unknown co-author in message",
-			wd:          "/a",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "Line 1\n\nCo-authored-by: Unknown <unknown@beef.com>",
 			expectedMsg: "Line 1\n\nCo-authored-by: Unknown <unknown@beef.com>\n",
+		},
+		{
+			desc:        "simple story id in first line",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[1337] Line 1",
+			expectedMsg: "Line 1\n\nStory ID: #1337\n\n",
+		},
+		{
+			desc:        "simple story id with hash in first line",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[#1337] Line 1",
+			expectedMsg: "Line 1\n\nStory ID: #1337\n\n",
+		},
+		{
+			desc:        "complex story id in first line",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[GOJ-1337] Line 1",
+			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\n",
+		},
+		{
+			desc:        "story id and co-author in first line",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[#1337,anand] Line 1",
+			expectedMsg: "Line 1\n\nStory ID: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+		},
+		{
+			desc:        "story id and co-author in first line",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[GOJ-1337|anand|akshat] Line 1",
+			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\nCo-authored-by: Akshat Shah <akshat@beef.com>\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+		},
+		{
+			desc:        "co-author in first line and story id in message",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "[anand] Line 1\n\nStory ID: #1337",
+			expectedMsg: "Line 1\n\nStory ID: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+		},
+		{
+			desc:        "complex story id in message",
+			author:      "Karan Misra <karan@beef.com>",
+			msg:         "Line 1\n\nStory ID: GOJ-1337",
+			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\n",
 		},
 	}
 
@@ -567,7 +598,7 @@ func TestAppendInfo(t *testing.T) {
 			return tt.author, nil
 		}
 
-		err = d.appendInfo(tt.wd, f.Name())
+		err = d.appendInfo("/a", f.Name())
 
 		if tt.errMsg != "" {
 			if !assert.Error(t, err) {
@@ -591,7 +622,7 @@ func TestAppendInfo(t *testing.T) {
 	}
 }
 
-func TestFirstLineDevIDs(t *testing.T) {
+func TestFirstLineIDs(t *testing.T) {
 	tests := []struct {
 		msg string
 		ids []string
@@ -627,10 +658,15 @@ func TestFirstLineDevIDs(t *testing.T) {
 			ids: []string{"a", "b", "c"},
 			idx: 7,
 		},
+		{
+			msg: "[GOJ-1337,a,b,c] hello there",
+			ids: []string{"GOJ-1337", "a", "b", "c"},
+			idx: 16,
+		},
 	}
 
 	for _, tt := range tests {
-		ids, idx := firstLineDevIDs(tt.msg)
+		ids, idx := firstLineIDs(tt.msg)
 		assert.Equal(t, tt.ids, ids)
 		assert.Equal(t, tt.idx, idx)
 	}
