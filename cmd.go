@@ -161,8 +161,13 @@ func main() {
 							}
 						}
 
+						xpBinPath, err := os.Executable()
+						if err != nil {
+							return errors.Wrap(err, "xp binary path resolve failed")
+						}
+
 						overwrite := c.Bool("overwrite")
-						if err := initRepo(dir, overwrite); err != nil {
+						if err := initRepo(dir, overwrite, xpBinPath); err != nil {
 							return errors.Wrap(err, "repo .git hook init failed")
 						}
 

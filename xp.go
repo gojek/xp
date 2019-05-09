@@ -108,7 +108,7 @@ func (d *data) addRepo(path string, devIDs []string, storyID string) error {
 	return nil
 }
 
-func initRepo(pathStr string, overwrite bool) error {
+func initRepo(pathStr string, overwrite bool, xpBinPath string) error {
 	gitPath := path.Join(pathStr, ".git")
 
 	if _, err := os.Stat(gitPath); err != nil {
@@ -123,6 +123,8 @@ func initRepo(pathStr string, overwrite bool) error {
 			}
 		}
 	}
+
+	hookStr := fmt.Sprintf(hookStrTmpl, xpBinPath)
 
 	for _, hookFile := range hookFiles {
 		hookFile = path.Join(gitPath, hookFile)
@@ -149,8 +151,8 @@ var hookFiles = []string{
 	"hooks/commit-msg",
 }
 
-var hookStr = `#!/bin/sh
-xp add-info $1
+var hookStrTmpl = `#!/bin/sh
+%s add-info $1
 `
 
 func (d *data) lookupRepo(pathStr string) (string, *repo) {
@@ -305,6 +307,8 @@ func (d *data) appendInfo(wd, msgFile string) error {
 		devEmails = append(devEmails, email)
 	}
 	sort.Strings(devEmails)
+
+	log.Printf("total devs: %v", devs)
 
 	for _, email := range devEmails {
 		dev := devs[email]

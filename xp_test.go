@@ -327,7 +327,7 @@ func TestInitRepo(t *testing.T) {
 			continue
 		}
 
-		err = initRepo(repoDir, tt.overwrite)
+		err = initRepo(repoDir, tt.overwrite, "/path/to/xp")
 
 		if tt.errMsg != "" {
 			if assert.Error(t, err) {
@@ -356,7 +356,7 @@ func validateHook(t *testing.T, hook string) {
 		return
 	}
 
-	assert.Equal(t, "#!/bin/sh\nxp add-info $1\n", string(data))
+	assert.Equal(t, "#!/bin/sh\n/path/to/xp add-info $1\n", string(data))
 }
 
 func TestLookupRepo(t *testing.T) {
