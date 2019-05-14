@@ -42,7 +42,7 @@ GLOBAL OPTIONS:
 The simplest way to install `xp` in your dev environment is:
 
 ```
-go get -u github.com/gojekfarm/xp
+go get -u github.com/gojek/xp
 ```
 
 `brew` will be added as an option at a later date.
