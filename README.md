@@ -2,6 +2,8 @@
 
 `xp` is a tool created to make practising extreme programming easier.
 
+[![Build Status](https://travis-ci.org/gojek/xp.svg?branch=master)](https://travis-ci.org/gojek/xp)
+
 ## Reference
 
 Full list of options supported:
