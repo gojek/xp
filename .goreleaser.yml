@@ -16,3 +16,12 @@ checksum:
   name_template: 'checksums.txt'
 changelog:
   sort: asc
+brew:
+  github:
+    owner: gojek
+    name: homebrew-tap
+  commit_author:
+    name: "Karan Misra"
+    email: "karan.misra@go-jek.com"
+  homepage: "https://github.com/gojek/xp"
+  description: "XP"
