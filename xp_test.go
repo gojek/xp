@@ -37,7 +37,7 @@ repos:
   /path/to/repo:
     devs:
     - ak
-    storyId: ""
+    issueId: ""
 `)
 
 	data, err := load(r)
@@ -69,7 +69,7 @@ repos:
   /path/to/repo:
     devs:
     - ak
-    storyId: ""
+    issueId: ""
 `
 
 	assert.Equal(t, expectedString, data.String())
@@ -101,7 +101,7 @@ repos:
   /path/to/repo:
     devs:
     - ak
-    storyId: ""
+    issueId: ""
 `
 
 	assert.Equal(t, expectedString, buf.String())
@@ -206,13 +206,13 @@ func TestDataAddRepo(t *testing.T) {
 	tests := []struct {
 		path    string
 		devIDs  []string
-		storyID string
+		issueID string
 		errMsg  string
 	}{
 		{
 			path:    "/some/path",
 			devIDs:  []string{"ak"},
-			storyID: "o-1",
+			issueID: "o-1",
 			errMsg:  "",
 		},
 		{
@@ -222,7 +222,7 @@ func TestDataAddRepo(t *testing.T) {
 		{
 			path:    "/some/path",
 			devIDs:  []string{"ak", "km"},
-			storyID: "o-1",
+			issueID: "o-1",
 			errMsg:  "",
 		},
 	}
@@ -241,7 +241,7 @@ func TestDataAddRepo(t *testing.T) {
 			},
 		}
 
-		err := d.addRepo(tt.path, tt.devIDs, tt.storyID)
+		err := d.addRepo(tt.path, tt.devIDs, tt.issueID)
 
 		if tt.errMsg != "" {
 			if assert.Error(t, err) {
@@ -252,7 +252,7 @@ func TestDataAddRepo(t *testing.T) {
 		}
 
 		assert.NoError(t, err)
-		assert.Equal(t, &repo{Devs: tt.devIDs, StoryID: tt.storyID}, d.Repos[tt.path])
+		assert.Equal(t, &repo{Devs: tt.devIDs, IssueID: tt.issueID}, d.Repos[tt.path])
 	}
 }
 
@@ -533,46 +533,46 @@ func TestAppendInfo(t *testing.T) {
 			expectedMsg: "Line 1\n\nCo-authored-by: Unknown <unknown@beef.com>\n",
 		},
 		{
-			desc:        "simple story id in first line",
+			desc:        "simple issue id in first line",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[1337] Line 1",
-			expectedMsg: "Line 1\n\nStory ID: #1337\n\n",
+			expectedMsg: "Line 1\n\nIssue-id: #1337\n\n",
 		},
 		{
-			desc:        "simple story id with hash in first line",
+			desc:        "simple issue id with hash in first line",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[#1337] Line 1",
-			expectedMsg: "Line 1\n\nStory ID: #1337\n\n",
+			expectedMsg: "Line 1\n\nIssue-id: #1337\n\n",
 		},
 		{
-			desc:        "complex story id in first line",
+			desc:        "complex issue id in first line",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[GOJ-1337] Line 1",
-			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\n",
+			expectedMsg: "Line 1\n\nIssue-id: GOJ-1337\n\n",
 		},
 		{
-			desc:        "story id and co-author in first line",
+			desc:        "issue id and co-author in first line",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[#1337,anand] Line 1",
-			expectedMsg: "Line 1\n\nStory ID: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+			expectedMsg: "Line 1\n\nIssue-id: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
 		},
 		{
-			desc:        "story id and co-author in first line",
+			desc:        "issue id and co-author in first line",
 			author:      "Karan Misra <karan@beef.com>",
 			msg:         "[GOJ-1337|anand|akshat] Line 1",
-			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\nCo-authored-by: Akshat Shah <akshat@beef.com>\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+			expectedMsg: "Line 1\n\nIssue-id: GOJ-1337\n\nCo-authored-by: Akshat Shah <akshat@beef.com>\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
 		},
 		{
-			desc:        "co-author in first line and story id in message",
+			desc:        "co-author in first line and issue id in message",
 			author:      "Karan Misra <karan@beef.com>",
-			msg:         "[anand] Line 1\n\nStory ID: #1337",
-			expectedMsg: "Line 1\n\nStory ID: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
+			msg:         "[anand] Line 1\n\nIssue-id: #1337",
+			expectedMsg: "Line 1\n\nIssue-id: #1337\n\nCo-authored-by: Anand Shankar <anand@beef.com>\n",
 		},
 		{
-			desc:        "complex story id in message",
+			desc:        "complex issue id in message",
 			author:      "Karan Misra <karan@beef.com>",
-			msg:         "Line 1\n\nStory ID: GOJ-1337",
-			expectedMsg: "Line 1\n\nStory ID: GOJ-1337\n\n",
+			msg:         "Line 1\n\nIssue-id: GOJ-1337",
+			expectedMsg: "Line 1\n\nIssue-id: GOJ-1337\n\n",
 		},
 	}
 

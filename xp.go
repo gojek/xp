@@ -79,7 +79,7 @@ func (d *data) lookupDev(id string) *dev {
 
 type repo struct {
 	Devs    []string `json:"devs"`
-	StoryID string   `json:"storyId"`
+	IssueID string   `json:"issueId"`
 }
 
 func (d *data) validateDevs(devIDs []string) error {
@@ -91,7 +91,7 @@ func (d *data) validateDevs(devIDs []string) error {
 	return nil
 }
 
-func (d *data) addRepo(path string, devIDs []string, storyID string) error {
+func (d *data) addRepo(path string, devIDs []string, issueID string) error {
 	if d.Repos == nil {
 		d.Repos = make(map[string]*repo)
 	}
@@ -102,7 +102,7 @@ func (d *data) addRepo(path string, devIDs []string, storyID string) error {
 
 	d.Repos[path] = &repo{
 		Devs:    devIDs,
-		StoryID: storyID,
+		IssueID: issueID,
 	}
 
 	return nil
@@ -194,6 +194,8 @@ func (d *data) updateRepoDevs(wd string, devIDs []string) error {
 	return nil
 }
 
+const issueIDPrefix = "Issue-id: "
+
 func (d *data) appendInfo(wd, msgFile string) error {
 	repoPath, repo := d.lookupRepo(wd)
 	if repo == nil {
@@ -217,7 +219,7 @@ func (d *data) appendInfo(wd, msgFile string) error {
 
 		devs    = make(map[string]*dev)
 		edevs   = existingDevs(msgStr)
-		storyID = existingStoryID(msgStr)
+		issueID = existingIssueID(msgStr)
 	)
 
 	for _, dev := range edevs {
@@ -236,10 +238,10 @@ func (d *data) appendInfo(wd, msgFile string) error {
 				continue
 			}
 
-			if i == 0 && storyIDRegexp.MatchString(id) {
+			if i == 0 && issueIDRegexp.MatchString(id) {
 				// We will assume the the first id (if not a dev)
-				// is the story id.
-				storyID = id
+				// is the issue id.
+				issueID = id
 				continue
 			}
 			return errors.Errorf("non-existing dev %s provided in the first line", id)
@@ -259,9 +261,9 @@ func (d *data) appendInfo(wd, msgFile string) error {
 		}
 	}
 
-	storyIDIdx := strings.Index(msgStr, "Story ID:")
-	if storyIDIdx != -1 {
-		msgStr = msgStr[:storyIDIdx-1]
+	issueIDIdx := strings.Index(msgStr, issueIDPrefix)
+	if issueIDIdx != -1 {
+		msgStr = msgStr[:issueIDIdx-1]
 	} else {
 		coAuthorIdx := strings.Index(msgStr, "Co-authored-by:")
 		if coAuthorIdx != -1 {
@@ -285,19 +287,17 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	}
 	defer f.Close()
 
-	// TODO: Add story info.
-
 	if _, err := io.Copy(f, strings.NewReader(msgStr)); err != nil {
 		return errors.Wrapf(err, "write existing msg back failed")
 	}
 
 	fmt.Fprintf(f, "\n\n")
 
-	if storyID != "" {
-		if _, err := strconv.Atoi(storyID); err == nil {
-			fmt.Fprintf(f, "Story ID: #%s\n\n", storyID)
+	if issueID != "" {
+		if _, err := strconv.Atoi(issueID); err == nil {
+			fmt.Fprintf(f, "%s#%s\n\n", issueIDPrefix, issueID)
 		} else {
-			fmt.Fprintf(f, "Story ID: %s\n\n", storyID)
+			fmt.Fprintf(f, "%s%s\n\n", issueIDPrefix, issueID)
 		}
 	}
 
@@ -325,7 +325,7 @@ func (d *data) appendInfo(wd, msgFile string) error {
 	return nil
 }
 
-var storyIDRegexp = regexp.MustCompile("#?.*[0-9]+")
+var issueIDRegexp = regexp.MustCompile("#?.*[0-9]+")
 
 func firstLineIDs(msg string) ([]string, int) {
 	if len(msg) == 0 {
@@ -382,18 +382,18 @@ func nameEmail(ident string) (string, string) {
 	return name, email
 }
 
-func existingStoryID(msg string) string {
+func existingIssueID(msg string) string {
 	scanner := bufio.NewScanner(strings.NewReader(msg))
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !strings.HasPrefix(line, "Story ID: ") {
+		if !strings.HasPrefix(line, issueIDPrefix) {
 			continue
 		}
 
-		storyID := line[10:]
-		if storyIDRegexp.MatchString(storyID) {
-			return storyID
+		issueID := line[len(issueIDPrefix):]
+		if issueIDRegexp.MatchString(issueID) {
+			return issueID
 		}
 	}
 
