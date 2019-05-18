@@ -15,19 +15,19 @@ USAGE:
    xp [global options] command [command options] [arguments...]
 
 VERSION:
-   0.2.4
+   (version)
 
 COMMANDS:
      show-config, sc  Print the current config
-     add-info         Add xp info to the COMMIT msg file
-     dev, d           Dev management
-     repo, r          Repo management
+     add-dev          Add a new developer
+     init, i          Initialize a repo. Setup prepare-commit-msg hook
+     set-devs         Set list of devs working on the repo
      help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config value  set the default configuration file (default: "~/.xp")
+   --config value  set the default configuration file (default: "/Users/kidoman/.xp")
    --help, -h      show help
-   --version, -v   print the version
+   --version, -v   print the versio
 ```
 
 ## Features
@@ -53,11 +53,12 @@ go get -u github.com/gojek/xp
 
 Most of the `xp` functionality are exposted via various subcommands:
 
-- `show-config` (`sc`): Print the current stored configuration
-- `dev` (`d`): Add/remove developers in xp
-- `repo` (`r`): Add/remove repos managed by xp
+- `show-config`: Print the current stored configuration
+- `add-dev`: Add/remove developers in xp
+- `init`: Add/remove repos managed by xp
 
 A separate command `add-info` is made available for use from within `git` hooks:
+
 - prepare-commit-msg
 - commit-msg
 
@@ -69,8 +70,8 @@ Suppose we have a repo at `~/work/lambda` which we want to now manage using `xp`
 Add Karan Misra &lt;kidoman@gmail.com&gt; as a tracked author in the system with shortcode "km" to allow for easy referencing in future command line invocations or the first line of commit messages. Same for "akshat":
 
 ```
-$ xp dev add km "Karan Misra" kidoman@beef.com
-$ xp dev add ak "akshat" akshat@beef.com
+$ xp add-dev km "Karan Misra" kidoman@beef.com
+$ xp add-dev ak "akshat" akshat@beef.com
 ```
 
 Switch to the directory with the `git` repo:
@@ -82,13 +83,13 @@ $ cd ~/work/lambda
 Initialize the git hooks and register the repo with `xp`:
 
 ```
-$ xp repo init .
+$ xp init
 ```
 
 Indicate that `akshat` is pairing with you by adding him using his shortcode:
 
 ```
-$ xp repo dev ak
+$ xp set-devs ak
 ```
 
 Commit as normal:
@@ -103,11 +104,31 @@ Rejoice at a well formed commit message:
 
 ```
 $ git log -1
-commit c4700d32046d94070de0c160eb35b2090973b507 (HEAD -> master)
+commit sha (HEAD -> master)
 Author: Karan Misra <kidoman@beef.com>
-Date:   Thu Mar 7 03:04:25 2019 +0530
+Date:   date
 
     Added CHANGE
+
+    Co-authored-by: akshat <akshat@beef.com>
+```
+
+When working on a story (issue, etc.), `xp` makes it really easy to embed the issue id in the commit in a well formed manner:
+
+```
+$ git add .
+$ git commit -m"[BEEF-123|ak] This is a nice story"
+```
+
+```
+$ git log -1
+commit sha (HEAD -> master)
+Author: Karan Misra <kidoman@beef.com>
+Date:   date
+
+    Make world better
+
+    Issue-id: BEEF-123
 
     Co-authored-by: akshat <akshat@beef.com>
 ```
@@ -117,7 +138,7 @@ Date:   Thu Mar 7 03:04:25 2019 +0530
 If you quickly want to author a commit with someone you typically don't pair with:
 
 ```
-$ xp dev add anand "Anand Shankar" anand@beef.com
+$ xp add-dev anand "Anand Shankar" anand@beef.com
 ```
 
 After making the required changes:
@@ -131,9 +152,9 @@ The commit message becomes:
 
 ```
 $ git log -1
-commit d4710d32046d94070de0c160eb35b2091973b507 (HEAD -> master)
+commit sha (HEAD -> master)
 Author: Karan Misra <kidoman@beef.com>
-Date:   Thu Mar 7 03:12:21 2019 +0530
+Date:   date
 
     Make world better
 

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	version = "0.2.4"
+	version = "0.3.0"
 	d       *data
 )
 
@@ -75,6 +75,11 @@ func main() {
 	app.Commands = []cli.Command{
 		showConfigCommand,
 		addInfoCommand,
+		addDevCommand,
+		initCommand,
+		setDevsCommand,
+
+		// Below commands are deprecated.
 		devCommand,
 		repoCommand,
 	}
@@ -99,6 +104,7 @@ var addInfoCommand = cli.Command{
 	Usage:       "Add xp info to the COMMIT msg file",
 	Description: "This is supposed to be invoked from inside a prepare-commit-msg hook",
 	ArgsUsage:   "commit-msg-file",
+	Hidden:      true,
 	Action: func(c *cli.Context) error {
 		wd, err := os.Getwd()
 		if err != nil {
@@ -115,35 +121,46 @@ var addInfoCommand = cli.Command{
 	},
 }
 
+var addDevCommand = cli.Command{
+	Name:      "add-dev",
+	Usage:     "Add a new developer",
+	ArgsUsage: `id "name" email`,
+	Action:    devAddAction,
+}
+
 var devCommand = cli.Command{
 	Name:    "dev",
 	Aliases: []string{"d"},
 	Usage:   "Dev management",
+	Hidden:  true,
 	Subcommands: []cli.Command{
 		{
 			Name:      "add",
 			Aliases:   []string{"a"},
 			Usage:     "Add a new developer",
 			ArgsUsage: `id "name" email`,
-			Action: func(c *cli.Context) error {
-				args := c.Args()
-
-				id, name, email := args.Get(0), args.Get(1), args.Get(2)
-				if id == "" || name == "" || email == "" {
-					return errors.New("invalid id/name/email")
-				}
-
-				d.addDev(id, name, email)
-				return nil
-			},
+			Action:    devAddAction,
 		},
 	},
+}
+
+var devAddAction = func(c *cli.Context) error {
+	args := c.Args()
+
+	id, name, email := args.Get(0), args.Get(1), args.Get(2)
+	if id == "" || name == "" || email == "" {
+		return errors.New("invalid id/name/email")
+	}
+
+	d.addDev(id, name, email)
+	return nil
 }
 
 var repoCommand = cli.Command{
 	Name:    "repo",
 	Aliases: []string{"r"},
 	Usage:   "Repo management",
+	Hidden:  true,
 	Subcommands: []cli.Command{
 		initCommand,
 		repoDevsCommand,
@@ -202,22 +219,31 @@ var initCommand = cli.Command{
 	},
 }
 
+var setDevsCommand = cli.Command{
+	Name:      "set-devs",
+	Usage:     "Set list of devs working on the repo",
+	ArgsUsage: "dev1 dev2 dev3",
+	Action:    repoDevsAction,
+}
+
 var repoDevsCommand = cli.Command{
 	Name:      "devs",
 	Aliases:   []string{"d", "dev"},
 	Usage:     "Set list of devs working on repo",
 	ArgsUsage: "dev1 dev2 dev3",
-	Action: func(c *cli.Context) error {
-		wd, err := os.Getwd()
-		if err != nil {
-			return errors.Wrap(err, "could not get wd")
-		}
-		devs := c.Args()
+	Action:    repoDevsAction,
+}
 
-		if err := d.updateRepoDevs(wd, devs); err != nil {
-			return errors.Wrap(err, "could not set devs")
-		}
+var repoDevsAction = func(c *cli.Context) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "could not get wd")
+	}
+	devs := c.Args()
 
-		return nil
-	},
+	if err := d.updateRepoDevs(wd, devs); err != nil {
+		return errors.Wrap(err, "could not set devs")
+	}
+
+	return nil
 }
