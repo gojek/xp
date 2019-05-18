@@ -1,5 +1,11 @@
+SHELL := /bin/bash
+
 .EXPORT_ALL_VARIABLES:
-BIN_DIR := _bin
+SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+OUT_DIR := $(SRC_DIR)/_output
+BIN_DIR := $(OUT_DIR)/bin
+
+$(@info $(shell mkdir -p $(OUT_DIR) $(BIN_DIR)))
 
 .PHONY: build
 build:
