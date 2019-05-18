@@ -23,5 +23,6 @@ brew:
   commit_author:
     name: "Karan Misra"
     email: "karan.misra@go-jek.com"
+  folder: Formula
   homepage: "https://github.com/gojek/xp"
   description: "XP"
