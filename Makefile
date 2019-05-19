@@ -19,4 +19,5 @@ test:
 
 .PHONY: coveralls
 coveralls:
-	goveralls -coverprofile=$(OUT_DIR)/coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
+	grep -v "cmd.go" $(OUT_DIR)/coverage.out > $(OUT_DIR)/coverage.out.coveralls
+	goveralls -coverprofile=$(OUT_DIR)/coverage.out.coveralls -service=travis-ci -repotoken $(COVERALLS_TOKEN)
