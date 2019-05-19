@@ -10,6 +10,9 @@ os:
 env:
   - GO111MODULE=on
 
+install:
+  - go get github.com/mattn/goveralls
+
 script: make test coveralls
 
 after_success:

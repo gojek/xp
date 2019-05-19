@@ -19,5 +19,4 @@ test:
 
 .PHONY: coveralls
 coveralls:
-	go get github.com/mattn/goveralls
 	goveralls -coverprofile=$(OUT_DIR)/coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
