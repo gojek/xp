@@ -48,7 +48,10 @@ The simplest way to install `xp` in your dev environment is:
 go get -u github.com/gojek/xp
 ```
 
-`brew` will be added as an option at a later date.
+If you do not have `go` installed, or prefer to install a different way, you can always:
+
+- Download a binary from the [releases](https://github.com/gojek/xp/releases) page
+- `brew install gojek/tap/xp`
 
 ## Usage
 
