@@ -4,6 +4,8 @@ SHELL := /bin/bash
 SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_DIR := $(SRC_DIR)/_output
 BIN_DIR := $(OUT_DIR)/bin
+GOFLAGS := -mod=vendor
+GO111MODULE := on
 
 $(@info $(shell mkdir -p $(OUT_DIR) $(BIN_DIR)))
 
@@ -13,4 +15,9 @@ build:
 
 .PHONE: test
 test:
-	go test -mod=vendor .
+	go test -mod=vendor -covermode=count -coverprofile=$(OUT_DIR)/coverage.out .
+
+.PHONY: coveralls
+coveralls:
+	go get github.com/mattn/goveralls
+	goveralls -coverprofile=$(OUT_DIR)/coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN

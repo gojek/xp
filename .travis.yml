@@ -10,7 +10,7 @@ os:
 env:
   - GO111MODULE=on
 
-script: make test
+script: make test coveralls
 
 after_success:
   - test -n "$TRAVIS_TAG"
