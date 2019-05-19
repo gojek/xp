@@ -19,4 +19,4 @@ test:
 
 .PHONY: coveralls
 coveralls:
-	goveralls -coverprofile=$(OUT_DIR)/coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+	goveralls -coverprofile=$(OUT_DIR)/coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
