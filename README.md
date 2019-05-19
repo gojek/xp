@@ -3,7 +3,7 @@
 `xp` is a tool created to make practising extreme programming easier.
 
 [![Build Status](https://travis-ci.org/gojek/xp.svg?branch=master)](https://travis-ci.org/gojek/xp)
-[![Coverage Status](https://coveralls.io/repos/github/gojek/xp/badge.svg)](https://coveralls.io/github/gojek/xp)
+[![Coverage Status](https://coveralls.io/repos/github/gojek/xp/badge.svg?v=2)](https://coveralls.io/github/gojek/xp)
 
 ## Reference
 
