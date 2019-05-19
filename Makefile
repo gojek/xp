@@ -11,11 +11,11 @@ $(@info $(shell mkdir -p $(OUT_DIR) $(BIN_DIR)))
 
 .PHONY: build
 build:
-	go build -mod=vendor -o $(BIN_DIR)/xp .
+	go build -o $(BIN_DIR)/xp .
 
 .PHONE: test
 test:
-	go test -mod=vendor -covermode=count -coverprofile=$(OUT_DIR)/coverage.out .
+	go test -covermode=count -coverprofile=$(OUT_DIR)/coverage.out .
 
 .PHONY: coveralls
 coveralls:
