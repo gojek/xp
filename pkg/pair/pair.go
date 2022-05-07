@@ -1,4 +1,4 @@
-package main
+package pair
 
 import (
 	"bufio"
@@ -18,18 +18,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-type data struct {
+type Data struct {
 	Devs  map[string]*dev  `json:"devs"`
 	Repos map[string]*repo `json:"repos"`
 }
 
-func load(r io.Reader) (*data, error) {
+func Load(r io.Reader) (*Data, error) {
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "read failed")
 	}
 
-	var d data
+	var d Data
 	if err := yaml.Unmarshal(bytes, &d); err != nil {
 		return nil, errors.Wrap(err, "unmarshall failed")
 	}
@@ -37,7 +37,7 @@ func load(r io.Reader) (*data, error) {
 	return &d, nil
 }
 
-func (d *data) String() string {
+func (d *Data) String() string {
 	b, err := yaml.Marshal(d)
 	if err != nil {
 		panic(err)
@@ -46,7 +46,7 @@ func (d *data) String() string {
 	return string(b)
 }
 
-func (d *data) store(w io.Writer) error {
+func (d *Data) Store(w io.Writer) error {
 	if _, err := io.Copy(w, strings.NewReader(d.String())); err != nil {
 		return errors.Wrap(err, "store failed")
 	}
@@ -63,14 +63,14 @@ func (d *dev) String() string {
 	return d.Name + " <" + d.Email + ">"
 }
 
-func (d *data) addDev(id, name, email string) {
+func (d *Data) AddDev(id, name, email string) {
 	if d.Devs == nil {
 		d.Devs = make(map[string]*dev)
 	}
 	d.Devs[id] = &dev{Name: name, Email: email}
 }
 
-func (d *data) lookupDev(id string) *dev {
+func (d *Data) lookupDev(id string) *dev {
 	if d.Devs == nil {
 		return nil
 	}
@@ -82,7 +82,7 @@ type repo struct {
 	IssueID string   `json:"issueId"`
 }
 
-func (d *data) validateDevs(devIDs []string) error {
+func (d *Data) validateDevs(devIDs []string) error {
 	for _, did := range devIDs {
 		if d.lookupDev(did) == nil {
 			return errors.Errorf("no dev with id %s found", did)
@@ -91,7 +91,7 @@ func (d *data) validateDevs(devIDs []string) error {
 	return nil
 }
 
-func (d *data) addRepo(path string, devIDs []string, issueID string) error {
+func (d *Data) AddRepo(path string, devIDs []string, issueID string) error {
 	if d.Repos == nil {
 		d.Repos = make(map[string]*repo)
 	}
@@ -108,7 +108,7 @@ func (d *data) addRepo(path string, devIDs []string, issueID string) error {
 	return nil
 }
 
-func initRepo(pathStr string, overwrite bool, xpBinPath string) error {
+func InitRepo(pathStr string, overwrite bool, xpBinPath string) error {
 	gitPath := path.Join(pathStr, ".git")
 
 	if _, err := os.Stat(gitPath); err != nil {
@@ -155,7 +155,7 @@ var hookStrTmpl = `#!/bin/sh
 %s add-info $1
 `
 
-func (d *data) lookupRepo(pathStr string) (string, *repo) {
+func (d *Data) lookupRepo(pathStr string) (string, *repo) {
 	if d.Repos == nil {
 		return "", nil
 	}
@@ -179,7 +179,7 @@ func (d *data) lookupRepo(pathStr string) (string, *repo) {
 	return "", nil
 }
 
-func (d *data) updateRepoDevs(wd string, devIDs []string) error {
+func (d *Data) UpdateRepoDevs(wd string, devIDs []string) error {
 	_, repo := d.lookupRepo(wd)
 	if repo == nil {
 		return errors.Errorf("no repo with path %s found", wd)
@@ -196,7 +196,7 @@ func (d *data) updateRepoDevs(wd string, devIDs []string) error {
 
 const issueIDPrefix = "Issue-id: "
 
-func (d *data) appendInfo(wd, msgFile string) error {
+func (d *Data) AppendInfo(wd, msgFile string) error {
 	repoPath, repo := d.lookupRepo(wd)
 	if repo == nil {
 		return errors.Errorf("no repo with path %s found", wd)

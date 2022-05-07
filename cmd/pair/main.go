@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/gojek/pair/pkg/pair"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
@@ -12,7 +14,7 @@ import (
 
 var (
 	version = "0.3.4"
-	d       *data
+	d       *pair.Data
 )
 
 func main() {
@@ -41,14 +43,14 @@ func main() {
 		f, err := os.Open(cfg)
 		if err != nil {
 			if os.IsNotExist(err) {
-				d = new(data)
+				d = new(pair.Data)
 				return nil
 			}
 			return errors.Wrapf(err, "could not open %s", cfg)
 		}
 		defer f.Close()
 
-		d, err = load(f)
+		d, err = pair.Load(f)
 		if err != nil {
 			return errors.Wrap(err, "load failed")
 		}
@@ -65,7 +67,7 @@ func main() {
 		}
 		defer f.Close()
 
-		if err := d.store(f); err != nil {
+		if err := d.Store(f); err != nil {
 			return errors.Wrap(err, "store failed")
 		}
 
@@ -113,7 +115,7 @@ var addInfoCommand = cli.Command{
 
 		msgFile := c.Args().Get(0)
 
-		if err := d.appendInfo(wd, msgFile); err != nil {
+		if err := d.AppendInfo(wd, msgFile); err != nil {
 			return errors.Wrap(err, "info add failed")
 		}
 
@@ -152,7 +154,7 @@ var devAddAction = func(c *cli.Context) error {
 		return errors.New("invalid id/name/email")
 	}
 
-	d.addDev(id, name, email)
+	d.AddDev(id, name, email)
 	return nil
 }
 
@@ -204,14 +206,14 @@ var initCommand = cli.Command{
 		}
 
 		overwrite := c.Bool("overwrite")
-		if err := initRepo(dir, overwrite, xpBinPath); err != nil {
+		if err := pair.InitRepo(dir, overwrite, xpBinPath); err != nil {
 			return errors.Wrap(err, "repo .git hook init failed")
 		}
 
 		devs := c.StringSlice("devs")
 		storyID := c.String("story-id")
 
-		if err := d.addRepo(dir, devs, storyID); err != nil {
+		if err := d.AddRepo(dir, devs, storyID); err != nil {
 			return errors.Wrap(err, "could add init repo")
 		}
 
@@ -241,7 +243,7 @@ var repoDevsAction = func(c *cli.Context) error {
 	}
 	devs := c.Args()
 
-	if err := d.updateRepoDevs(wd, devs); err != nil {
+	if err := d.UpdateRepoDevs(wd, devs); err != nil {
 		return errors.Wrap(err, "could not set devs")
 	}
 

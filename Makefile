@@ -13,9 +13,8 @@ $(@info $(shell mkdir -p $(OUT_DIR) $(BIN_DIR)))
 build:
 	go build -o $(BIN_DIR)/xp .
 
-.PHONE: test
 test:
-	go test -covermode=count -coverprofile=$(OUT_DIR)/coverage.out .
+	go test -covermode=count -coverprofile=$(OUT_DIR)/coverage.out ./pkg/...
 
 .PHONY: coveralls
 coveralls:

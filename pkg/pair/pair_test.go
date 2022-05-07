@@ -1,4 +1,4 @@
-package main
+package pair
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	expectedData := data{
+	expectedData := Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -40,14 +40,14 @@ repos:
     issueId: ""
 `)
 
-	data, err := load(r)
+	data, err := Load(r)
 	assert.NoError(t, err)
 
 	assert.Equal(t, &expectedData, data)
 }
 
 func TestDataString(t *testing.T) {
-	data := data{
+	data := Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -76,7 +76,7 @@ repos:
 }
 
 func TestDataStore(t *testing.T) {
-	data := data{
+	data := Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -91,7 +91,7 @@ func TestDataStore(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	assert.NoError(t, data.store(&buf))
+	assert.NoError(t, data.Store(&buf))
 
 	expectedString := `devs:
   ak:
@@ -117,13 +117,13 @@ func TestDevString(t *testing.T) {
 }
 
 func TestDataAddDev(t *testing.T) {
-	var d data
+	var d Data
 
-	d.addDev("km", "Karan Misra", "karan@beef.com")
+	d.AddDev("km", "Karan Misra", "karan@beef.com")
 
 	assert.Equal(t, &dev{Name: "Karan Misra", Email: "karan@beef.com"}, d.Devs["km"])
 
-	d = data{
+	d = Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -132,18 +132,18 @@ func TestDataAddDev(t *testing.T) {
 		},
 	}
 
-	d.addDev("km", "Karan Misra", "karan@beef.com")
+	d.AddDev("km", "Karan Misra", "karan@beef.com")
 
 	assert.Equal(t, &dev{Name: "Karan Misra", Email: "karan@beef.com"}, d.Devs["km"])
 	assert.Equal(t, &dev{Name: "akshat", Email: "akshat@beef.com"}, d.Devs["ak"])
 }
 
 func TestDataLookupDev(t *testing.T) {
-	var d data
+	var d Data
 
 	assert.Equal(t, (*dev)(nil), d.lookupDev("km"))
 
-	d = data{
+	d = Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -157,7 +157,7 @@ func TestDataLookupDev(t *testing.T) {
 }
 
 func TestDataValidateDevs(t *testing.T) {
-	d := data{
+	d := Data{
 		Devs: map[string]*dev{
 			"ak": &dev{
 				Name:  "akshat",
@@ -228,7 +228,7 @@ func TestDataAddRepo(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		d := data{
+		d := Data{
 			Devs: map[string]*dev{
 				"ak": &dev{
 					Name:  "akshat",
@@ -241,7 +241,7 @@ func TestDataAddRepo(t *testing.T) {
 			},
 		}
 
-		err := d.addRepo(tt.path, tt.devIDs, tt.issueID)
+		err := d.AddRepo(tt.path, tt.devIDs, tt.issueID)
 
 		if tt.errMsg != "" {
 			if assert.Error(t, err) {
@@ -327,7 +327,7 @@ func TestInitRepo(t *testing.T) {
 			continue
 		}
 
-		err = initRepo(repoDir, tt.overwrite, "/path/to/xp")
+		err = InitRepo(repoDir, tt.overwrite, "/path/to/xp")
 
 		if tt.errMsg != "" {
 			if assert.Error(t, err) {
@@ -362,7 +362,7 @@ func validateHook(t *testing.T, hook string) {
 func TestLookupRepo(t *testing.T) {
 	repo1, repo2 := new(repo), new(repo)
 
-	d := data{
+	d := Data{
 		Repos: map[string]*repo{
 			"/a/b/c": repo1,
 			"/x/y/z": repo2,
@@ -428,7 +428,7 @@ func TestUpdateRepoDevs(t *testing.T) {
 
 	for _, tt := range tests {
 		r := new(repo)
-		d := data{
+		d := Data{
 			Devs: map[string]*dev{
 				"anand": new(dev),
 			},
@@ -437,7 +437,7 @@ func TestUpdateRepoDevs(t *testing.T) {
 			},
 		}
 
-		err := d.updateRepoDevs(tt.wd, tt.devIDs)
+		err := d.UpdateRepoDevs(tt.wd, tt.devIDs)
 
 		if tt.errMsg != "" {
 			if !assert.Error(t, err) {
@@ -457,7 +457,7 @@ func TestUpdateRepoDevs(t *testing.T) {
 }
 
 func TestAppendInfo(t *testing.T) {
-	d := data{
+	d := Data{
 		Devs: map[string]*dev{
 			"karan": &dev{
 				Name: "Karan Misra", Email: "karan@beef.com",
@@ -598,7 +598,7 @@ func TestAppendInfo(t *testing.T) {
 			return tt.author, nil
 		}
 
-		err = d.appendInfo("/a", f.Name())
+		err = d.AppendInfo("/a", f.Name())
 
 		if tt.errMsg != "" {
 			if !assert.Error(t, err) {
